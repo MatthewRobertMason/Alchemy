@@ -10,9 +10,13 @@ namespace AlchemyConsole
 {
     class Program
     {
+        private static Random rand;
+
         static void Main(string[] args)
         {
-            Tags tags = new Tags();
+            rand = new Random();
+
+            Tags tags = new Tags(rand.Next());
 
             AddTypes(tags);
             AddStrongAgainst(tags);
@@ -20,17 +24,30 @@ namespace AlchemyConsole
 
             List<string> leftTags = new List<string>() { "Water", "Air"};
             List<string> rightTags = new List<string>() { "Air"};
+            
+            List<string> Combined = new List<string>();
 
-            List<string> Combined = tags.CombineTags(leftTags, rightTags);
-
-            Console.Write("[");
-            foreach (string s in Combined)
+            for (int i = 0; i < 10; i++)
             {
-                Console.Write(s);
-                Console.Write(",");
+                Combined = tags.CombineTags(leftTags, rightTags);
+                DisplayList(Combined);
             }
 
             Console.Read();
+        }
+
+        public static void DisplayList(List<string> list)
+        {
+            StringBuilder sbuild = new StringBuilder();
+            sbuild.Append("[");
+            foreach (string s in list)
+            {
+                sbuild.Append(s);
+                sbuild.Append(",");
+            }
+            sbuild.Remove(sbuild.Length - 1, 1);
+            sbuild.AppendLine("]");
+            Console.WriteLine(sbuild);
         }
 
         public static void AddTypes(Tags tags)

@@ -6,6 +6,7 @@ namespace AlchemyEngine
 {
     public class Tags
     {
+        private Random rand;
         private HashSet<string> types;
         private Dictionary<string, HashSet<string>> strongAgainst;
         private Dictionary<string, Dictionary<string, string>> synthRules;
@@ -16,8 +17,9 @@ namespace AlchemyEngine
         public Dictionary<string, Dictionary<string, string>> SynthRules { get => synthRules; set => synthRules = value; }
         public Dictionary<string, string> Kinds { get => kinds; set => kinds = value; }
 
-        public Tags()
+        public Tags(int seed)
         {
+            rand = new Random(seed);
             types = new HashSet<string>();
             strongAgainst = new Dictionary<string, HashSet<string>>();
             synthRules = new Dictionary<string, Dictionary<string, string>>();
@@ -29,7 +31,7 @@ namespace AlchemyEngine
             List<string> right= new List<string>(initRight);
 
             List<string> newTags = new List<string>();
-            Random rand = new Random();
+            
             int leftIndex = 0;
             int rightIndex = 0;
             while (left.Count > 0 && right.Count > 0)
@@ -58,8 +60,6 @@ namespace AlchemyEngine
 
         public List<string> Combine(string left, string right)
         {
-            Random rand = new Random();
-
             int maxWeight = 0;
             // Left, Right, weight, rule
             List<Tuple<string, string, int, ruleTypes>> rules = new List<Tuple<string, string, int, ruleTypes>>();
@@ -132,8 +132,7 @@ namespace AlchemyEngine
 
         public List<string> BasicRule(string left, string right)
         {
-            Random r = new Random();
-            double prob = r.NextDouble();
+            double prob = rand.NextDouble();
 
             List<string> newTags = new List<string>();
 
@@ -163,8 +162,7 @@ namespace AlchemyEngine
         public List<string> StrongRule(string left, string right)
         {
             List<string> newTags = new List<string>();
-            Random r = new Random();
-            double prob = r.NextDouble();
+            double prob = rand.NextDouble();
 
             if (StrongAgainst.ContainsKey(left) && StrongAgainst[left].Contains(right))
             {
@@ -197,8 +195,7 @@ namespace AlchemyEngine
         // General Rules
         public List<string> CombineRule(string left)
         {
-            Random r = new Random();
-            double prob = r.NextDouble();
+            double prob = rand.NextDouble();
 
             List<string> newTags = new List<string>();
 
