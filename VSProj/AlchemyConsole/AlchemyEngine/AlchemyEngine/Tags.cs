@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace AlchemyEngine
 {
@@ -23,8 +24,59 @@ namespace AlchemyEngine
             types = new HashSet<string>();
             strongAgainst = new Dictionary<string, HashSet<string>>();
             synthRules = new Dictionary<string, Dictionary<string, string>>();
+            kinds = new Dictionary<string, string>();
         }
 
+        public Tags(string dataFilePath)
+        {
+            types = new HashSet<string>();
+            strongAgainst = new Dictionary<string, HashSet<string>>();
+            synthRules = new Dictionary<string, Dictionary<string, string>>();
+            kinds = new Dictionary<string, string>();
+
+            var root = JObject.Parse(System.IO.File.ReadAllText(dataFilePath));
+            var tags = (JObject)root["tags"];
+
+            // Set the keys
+            foreach(var row in tags){
+                types.Add(row.Key);
+                strongAgainst[row.Key] = new HashSet<string>();
+                synthRules[row.Key] = new Dictionary<string, string>();
+            }
+
+            // Load the properties of each pairing
+            foreach(var row in tags){
+                var data = (JObject)row.Value;
+
+                // Note what things are strong against this
+                foreach(string stronger in data["weakness"]){
+                    if(!types.Contains(stronger)) 
+                        throw new Exception(stronger + " is not a tag type.");
+                    strongAgainst[stronger].Add(row.Key);
+                }
+
+                // Note what things this synthesises whith 
+                JToken synths;
+                if(data.TryGetValue("synth", StringComparison.Ordinal, out synths)){
+                    foreach(var product in (JObject)synths){
+                        if(!types.Contains(product.Key)) 
+                            throw new Exception(product.Key + " is not a tag type.");
+                        if(!types.Contains((string)product.Value)) 
+                            throw new Exception((string)product.Value + " is not a tag type.");
+                        synthRules[row.Key][product.Key] = (string)product.Value;
+                    }
+                }
+
+                // Check if there is a kind
+                JToken kind;
+                if(data.TryGetValue("kind", StringComparison.Ordinal, out kind)){
+                    if(!types.Contains((string)kind))
+                        throw new Exception((string)kind + " is not a tag type.");
+                    kinds[row.Key] = (string)kind;
+                }
+            }
+        }
+      
         public List<string> CombineTags (List<string> initLeft, List<string> initRight)
         {
             List<string> left = new List<string>(initLeft);
@@ -49,7 +101,7 @@ namespace AlchemyEngine
 
             return newTags;
         }
-
+      
         enum ruleTypes
         {
             Synth,
