@@ -38,4 +38,5 @@ sysinfo.txt
 # IDE STUFF
 .vscode/
 
-!VSProj/
+!VSProj/**/*.sln
+!VSProj/**/*.csproj
