@@ -1,0 +1,22 @@
+{"tags": {
+  "metal": {
+    "weakness": ["water", "fire"],
+    "synth": {"wood": "fire"}
+  },
+  "earth": {
+    "weakness": ["metal", "wood"],
+    "synth": {"water": "wood"}
+  },
+  "wood": {
+    "weakness": ["fire", "metal"],
+    "synth": {"earth": "metal"}
+  },
+  "water": {
+    "weakness": ["wood", "earth"],
+    "synth": {"fire": "earth"}
+  },
+  "fire": {
+    "weakness": ["earth", "water"],
+    "synth": {"metal": "water"}
+  }
+}}
