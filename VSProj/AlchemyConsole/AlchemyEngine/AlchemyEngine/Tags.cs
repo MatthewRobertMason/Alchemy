@@ -18,9 +18,9 @@ namespace AlchemyEngine
         public Dictionary<string, Dictionary<string, string>> SynthRules { get => synthRules; set => synthRules = value; }
         public Dictionary<string, string> Kinds { get => kinds; set => kinds = value; }
 
-        public Tags(int seed)
+        public Tags()
         {
-            rand = new Random(seed);
+            rand = new Random();
             types = new HashSet<string>();
             strongAgainst = new Dictionary<string, HashSet<string>>();
             synthRules = new Dictionary<string, Dictionary<string, string>>();
@@ -29,12 +29,14 @@ namespace AlchemyEngine
 
         public Tags(string dataFilePath)
         {
+            rand = new Random();
+
             types = new HashSet<string>();
             strongAgainst = new Dictionary<string, HashSet<string>>();
             synthRules = new Dictionary<string, Dictionary<string, string>>();
             kinds = new Dictionary<string, string>();
 
-            var root = JObject.Parse(System.IO.File.ReadAllText(dataFilePath));
+            var root =  JObject.Parse(System.IO.File.ReadAllText(dataFilePath));
             var tags = (JObject)root["tags"];
 
             // Set the keys
