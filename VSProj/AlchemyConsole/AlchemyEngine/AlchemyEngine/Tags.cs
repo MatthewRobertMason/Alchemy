@@ -7,10 +7,23 @@ namespace AlchemyEngine
 {
     public class Tags
     {
-        HashSet<string> types;
-        Dictionary<string, HashSet<string>> strongAgainst;
-        Dictionary<string, Dictionary<string, string>> synthRules;
-        Dictionary<string, string> kinds;
+        private HashSet<string> types;
+        private Dictionary<string, HashSet<string>> strongAgainst;
+        private Dictionary<string, Dictionary<string, string>> synthRules;
+        private Dictionary<string, string> kinds;
+
+        public HashSet<string> Types { get => types; set => types = value; }
+        public Dictionary<string, HashSet<string>> StrongAgainst { get => strongAgainst; set => strongAgainst = value; }
+        public Dictionary<string, Dictionary<string, string>> SynthRules { get => synthRules; set => synthRules = value; }
+        public Dictionary<string, string> Kinds { get => kinds; set => kinds = value; }
+
+        public Tags()
+        {
+            types = new HashSet<string>();
+            strongAgainst = new Dictionary<string, HashSet<string>>();
+            synthRules = new Dictionary<string, Dictionary<string, string>>();
+            kinds = new Dictionary<string, string>();
+        }
 
         public Tags(string dataFilePath)
         {
@@ -62,11 +75,109 @@ namespace AlchemyEngine
             }
         }
       
+        public List<string> CombineTags (List<string> initLeft, List<string> initRight)
+        {
+            List<string> left = new List<string>(initLeft);
+            List<string> right= new List<string>(initRight);
+
+            List<string> newTags = new List<string>();
+            Random rand = new Random();
+            int leftIndex = 0;
+            int rightIndex = 0;
+            while (left.Count > 0 && right.Count > 0)
+            {
+                leftIndex = rand.Next(left.Count);
+                rightIndex = rand.Next(right.Count);
+                newTags.AddRange(Combine(left[leftIndex], right[rightIndex]));
+
+                left.RemoveAt(leftIndex);
+                right.RemoveAt(rightIndex);
+            }
+
+            newTags.AddRange(left);
+            newTags.AddRange(right);
+
+            return newTags;
+        }
+      
+        enum ruleTypes
+        {
+            Synth,
+            Strong,
+            Basic,
+            Combine
+        }
+
+        public List<string> Combine(string left, string right)
+        {
+            Random rand = new Random();
+
+            int maxWeight = 0;
+            // Left, Right, weight, rule
+            List<Tuple<string, string, int, ruleTypes>> rules = new List<Tuple<string, string, int, ruleTypes>>();
+
+            if (SynthRules.ContainsKey(left) && SynthRules[left].ContainsKey(right))
+            {
+                rules.Add(new Tuple<string, string, int, ruleTypes>(left, right, 5, ruleTypes.Synth));
+                maxWeight += 5;
+            }
+            else if (SynthRules.ContainsKey(right) && SynthRules[right].ContainsKey(left))
+            {
+                rules.Add(new Tuple<string, string, int, ruleTypes>(right, left, 5, ruleTypes.Synth));
+                maxWeight += 5;
+            }
+            if (StrongAgainst.ContainsKey(left) && StrongAgainst[left].Contains(right))
+            {
+                rules.Add(new Tuple<string, string, int, ruleTypes>(left, right, 6, ruleTypes.Strong));
+                maxWeight += 6;
+            }
+            else if (StrongAgainst.ContainsKey(right) && StrongAgainst[right].Contains(left))
+            {
+                rules.Add(new Tuple<string, string, int, ruleTypes>(right, left, 6, ruleTypes.Strong));
+                maxWeight += 6;
+            }
+
+            rules.Add(new Tuple<string, string, int, ruleTypes>(left, right, 1, ruleTypes.Basic));
+            maxWeight += 1;
+
+            if (left == right)
+            { 
+                rules.Add(new Tuple<string, string, int, ruleTypes>(left, right, 1, ruleTypes.Combine));
+                maxWeight += 1;
+            }
+
+            int randomweight = rand.Next() % maxWeight;
+            
+            foreach(Tuple<string, string, int, ruleTypes> tuple in rules)
+            {
+                randomweight -= tuple.Item3;
+
+                if (randomweight <= 0)
+                {
+                    switch (tuple.Item4)
+                    {
+                        case ruleTypes.Basic:
+                            return BasicRule(tuple.Item1, tuple.Item2);
+                            
+                        case ruleTypes.Combine:
+                            return CombineRule(tuple.Item1);
+                            
+                        case ruleTypes.Strong:
+                            return StrongRule(tuple.Item1, tuple.Item2);
+
+                        case ruleTypes.Synth:
+                            return SynthRule(tuple.Item1, tuple.Item2);
+                    }
+                }
+            }
+            throw new Exception("Error with rules");
+        }
+
         // Synth Rules
         public List<string> SynthRule(string left, string right)
         {
             List<string> newTags = new List<string>();
-            newTags.Add(synthRules[left][right]);
+            newTags.Add(SynthRules[left][right]);
 
             return newTags;
         }
@@ -107,7 +218,7 @@ namespace AlchemyEngine
             Random r = new Random();
             double prob = r.NextDouble();
 
-            if (strongAgainst.ContainsKey(left) && strongAgainst[left].Contains(right))
+            if (StrongAgainst.ContainsKey(left) && StrongAgainst[left].Contains(right))
             {
                 if (prob < 0.1)
                 {
@@ -119,7 +230,7 @@ namespace AlchemyEngine
                     newTags.Add(left);
                 }
             }
-            if (strongAgainst.ContainsKey(right) && strongAgainst[left].Contains(left))
+            if (StrongAgainst.ContainsKey(right) && StrongAgainst[left].Contains(left))
             {
                 if (prob < 0.1)
                 {
